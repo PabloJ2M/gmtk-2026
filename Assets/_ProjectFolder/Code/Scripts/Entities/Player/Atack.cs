@@ -1,28 +1,31 @@
 using UnityEngine;
 
-public class Attack : MonoBehaviour
+namespace Entity.Controller
 {
-    [Header("Configuración de Ataque")]
-    [SerializeField] private int dano = 10;
-    [SerializeField] private float fuerzaKnockback = 8f;
-
-    private void OnCollisionEnter2D(Collision2D collision)
+    public class Attack : MonoBehaviour
     {
-        if (collision.gameObject.CompareTag("Player"))
+        [Header("Configuración de Ataque")]
+        [SerializeField] private int dano = 10;
+        [SerializeField] private float fuerzaKnockback = 8f;
+
+        private void OnCollisionEnter2D(Collision2D collision)
         {
-            Stats playerStats = collision.gameObject.GetComponent<Stats>();
-
-            if (playerStats != null)
+            if (collision.gameObject.CompareTag("Player"))
             {
-                // 1. Calculamos la dirección del empujón (del enemigo hacia el jugador)
-                Vector2 direccionEmpujon = (collision.transform.position - transform.position).normalized;
+                Stats playerStats = collision.gameObject.GetComponent<Stats>();
 
-                // Le agregamos un leve impulso hacia arriba (0.3) para que despegue del suelo al ser golpeado
-                direccionEmpujon.y += 0.3f;
-                direccionEmpujon = direccionEmpujon.normalized;
+                if (playerStats != null)
+                {
+                    // 1. Calculamos la dirección del empujón (del enemigo hacia el jugador)
+                    Vector2 direccionEmpujon = (collision.transform.position - transform.position).normalized;
 
-                // 2. Llamamos a la función consolidada en Stats
-                playerStats.TomarDano(dano, direccionEmpujon, fuerzaKnockback);
+                    // Le agregamos un leve impulso hacia arriba (0.3) para que despegue del suelo al ser golpeado
+                    direccionEmpujon.y += 0.3f;
+                    direccionEmpujon = direccionEmpujon.normalized;
+
+                    // 2. Llamamos a la función consolidada en Stats
+                    playerStats.TomarDano(dano, direccionEmpujon, fuerzaKnockback);
+                }
             }
         }
     }

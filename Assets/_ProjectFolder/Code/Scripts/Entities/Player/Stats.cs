@@ -1,43 +1,34 @@
 using UnityEngine;
 
-public class Stats : MonoBehaviour
+namespace Entity.Controller
 {
-    [Header("Salud")]
-    public int health = 100;
-
-    [Header("Configuración Knockback")]
-    private Rigidbody2D rb;
-
-    private void Awake()
+    public class Stats : MonoBehaviour
     {
-       
-        rb = GetComponent<Rigidbody2D>();
-    }
+        [Header("Salud")]
+        public int health = 100;
+        
+        private ObjectPhysics _physics;
 
-    private void Update()
-    {
-        if (health <= 0)
+        private void Awake()
         {
-            Debug.Log("Player is dead");
-          
+            _physics = GetComponent<ObjectPhysics>();
         }
-    }
 
-    //daño y nockbackback
-    public void TomarDano(int cantidadDano, Vector2 direccionGolpe, float fuerzaKnockback)
-    {
-      
-        health -= cantidadDano;
-        Debug.Log("Player hit! Health is now: " + health);
-
-       
-        if (rb != null)
+        //daño y nockbackback
+        public void TomarDano(int cantidadDano, Vector2 direccionGolpe, float fuerzaKnockback)
         {
-           
-            rb.linearVelocity = Vector2.zero;
-
-          
-            rb.AddForce(direccionGolpe * fuerzaKnockback, ForceMode2D.Impulse);
+            health -= cantidadDano;
+            Debug.Log("Player hit! Health is now: " + health);
+            
+            if (_physics != null)
+            {
+                _physics.SetLinearVelocity(fuerzaKnockback * direccionGolpe);
+            }
+            
+            if (health <= 0)
+            {
+                Debug.Log("Player is dead");
+            }
         }
     }
 }
