@@ -8,8 +8,13 @@ namespace Entity.Controller
     public class Jump : MonoBehaviour
     {
         [SerializeField] private float jumpForce = 5f;
-        [SerializeField] private float bufferTime = 0.1f, coyoteTime = 0.2f;
+        [SerializeField] private InputBuffer inputBuffer;
+        [SerializeField] private InputCoyote inputCoyote;
+        [SerializeField] private InputHold inputHold;
 
+        [SerializeField, Range(0f, 1f)] private float jumpCutMultiplier = 0.5f;
+        [SerializeField] private float holdForce = 12f;
+        
         [Header("Detection")]
         [SerializeField] private LayerMask groundMask;
         [SerializeField, Range(0f, 90f)] private float maxGroundAngle = 45f;
@@ -18,21 +23,24 @@ namespace Entity.Controller
         
         private ObjectAnimations _animator;
         private ObjectPhysics _physics;
-        
-        private float _bufferTimer, _coyoteTimer;
+        private bool _isPressing;
 
         private void Awake()
         {
             _animator = GetComponent<ObjectAnimations>();
             _physics = GetComponent<ObjectPhysics>();
         }
-        private void Update()
+        private void FixedUpdate()
         {
-            if (_bufferTimer > 0f)
-                _bufferTimer -= Time.deltaTime;
+            if (!inputHold.HasHoldTime) return;
             
-            if (_coyoteTimer > 0f)
-                _coyoteTimer -= Time.deltaTime;
+            if (_physics.GetLinearVelocityY() <= 0f)
+            {
+                inputHold.Consume();
+                return;
+            }
+            
+            _physics.AddForceY(holdForce, ForceMode2D.Force);
         }
 
         private void OnCollisionEnter2D(Collision2D collision)
@@ -42,8 +50,8 @@ namespace Entity.Controller
 
             _contacts.Add(collision.collider);
             _physics.SetIsGrounded(true);
-            
-            InputBufferCollisionEvent();
+
+            if (inputBuffer.TryConsume()) JumpHandler();
         }
         private void OnCollisionExit2D(Collision2D collision)
         {
@@ -51,30 +59,36 @@ namespace Entity.Controller
             _contacts.Remove(collision.collider);
             
             if (_contacts.Count > 0) return;
-            
             _physics.SetIsGrounded(false);
-            InputCoyoteCollisionEvent();
+            
+            if (_physics.GetLinearVelocityY() <= 0f) inputCoyote.Set();
         }
         
-        private void OnJump()
+        private void OnJump(InputValue input)
         {
-            _bufferTimer = bufferTime;
-            if (!_physics.IsGrounded() && _coyoteTimer <= 0f) return;
+            _isPressing = input.isPressed;
+            if (_isPressing)
+            {
+                JumpHandler();
+                inputHold.Set();
+            }
+            else
+            {
+                inputHold.Consume();
+                
+                if (_physics.GetLinearVelocityY() > 0f)
+                    _physics.SetLinearVelocityY(_physics.GetLinearVelocityY() * jumpCutMultiplier);
+            }
+        }
+        private void JumpHandler()
+        {
+            inputBuffer.Set();
+            if (!_physics.IsGrounded() && !inputCoyote.HasCoyoteTime) return;
+            if (_isPressing) inputHold.Set();
             
             _physics.SetLinearVelocityY(jumpForce);
             // _animator.SetTrigger("jump");
-            _coyoteTimer = 0f;
-        }
-        
-        private void InputBufferCollisionEvent()
-        {
-            if (_bufferTimer > 0)
-                OnJump();
-        }
-        private void InputCoyoteCollisionEvent()
-        {
-            if (_bufferTimer <= 0)
-                _coyoteTimer = coyoteTime;
+            inputCoyote.Consume();
         }
     }
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Entity.Controller
 {
@@ -20,8 +21,9 @@ namespace Entity.Controller
             _physics = GetComponent<ObjectPhysics>();
         }
         
-        private void OnJump()
+        private void OnJump(InputValue input)
         {
+            if (!input.isPressed) return;
             if (_physics.IsFreezeVertical() || _physics.IsGrounded()) return;
             
             //Detect walls for wall jump

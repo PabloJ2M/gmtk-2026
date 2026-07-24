@@ -35,7 +35,7 @@ namespace Entity.Controller
         }
 
         private void OnMove(InputValue input) { if (_isClimbing && input.Get<Vector2>() != Vector2.zero) CancelClimb(); }
-        private void OnJump() { if (_isClimbing && !_isRecovering) SucceedClimb(); }
+        private void OnJump(InputValue input) { if (_isClimbing && !_isRecovering && input.isPressed) SucceedClimb(); }
         
         private bool TryFindLedge(out Vector2 corner)
         {
