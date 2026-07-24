@@ -23,7 +23,7 @@ namespace Entity.Controller
         }
         private void OnSprint()
         {
-            if (_isDashing) return;
+            if (_isDashing || _physics.IsFreezeHorizontal()) return;
             
             _isDashing = true;
             // _animator.SetTrigger("dash");

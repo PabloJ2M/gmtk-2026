@@ -1153,7 +1153,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdb1a7e1cc87627ccb2a94818e29c9fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Entity.Controller.ClimbEdge
-  duration: 0.5
+  timeRecovery: 1
   climbOffset: {x: 1, y: 1}
   bodyOffset: {x: 0.5, y: 0.5}
   edgeMask:
@@ -1173,6 +1173,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1f27265e736ffeaebc836151e7cd628, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Entity.Controller.Atack
+  dano: 10
+  fuerzaKnockback: 8
 --- !u!1 &1718053178
 GameObject:
   m_ObjectHideFlags: 0

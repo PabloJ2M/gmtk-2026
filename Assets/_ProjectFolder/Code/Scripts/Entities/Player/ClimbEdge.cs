@@ -1,11 +1,12 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Entity.Controller
 {
     public class ClimbEdge : MonoBehaviour
     {
-        [SerializeField] private float duration = 0.5f;
+        [SerializeField] private float timeRecovery = 1f;
         [SerializeField] private Vector2 climbOffset = Vector2.one, bodyOffset = 0.5f * Vector2.one;
         
         [Header("Detection")]
@@ -15,15 +16,15 @@ namespace Entity.Controller
 
         private ObjectAnimations _animator;
         private ObjectPhysics _physics;
-
-        private WaitForSeconds _climbDelay;
-        private bool _isClimbing;
+        
+        private WaitForSeconds _waitTimeRecovery;
+        private bool _isClimbing, _isRecovering;
 
         private void Awake()
         {
             _animator = GetComponent<ObjectAnimations>();
             _physics = GetComponent<ObjectPhysics>();
-            _climbDelay = new(duration);
+            _waitTimeRecovery = new(timeRecovery);
         }
         private void Update()
         {
@@ -32,6 +33,9 @@ namespace Entity.Controller
             if (TryFindLedge(out Vector2 corner))
                 StartClimb(corner);
         }
+
+        private void OnMove(InputValue input) { if (_isClimbing && input.Get<Vector2>() != Vector2.zero) CancelClimb(); }
+        private void OnJump() { if (_isClimbing && !_isRecovering) SucceedClimb(); }
         
         private bool TryFindLedge(out Vector2 corner)
         {
@@ -57,27 +61,42 @@ namespace Entity.Controller
             corner = new Vector2(wallHit.point.x - bodyOffset.x * direction.x, ledgeHit.point.y - bodyOffset.y);
             return true;
         }
+        
         private void StartClimb(Vector2 corner)
         {
             _isClimbing = true;
-            _physics.SetFreeze(true, duration);
-            _physics.SetConstrain(RigidbodyConstraints2D.FreezeAll, duration);
+            _physics.SetFreeze(true);
+            _physics.SetConstrain(RigidbodyConstraints2D.FreezeAll);
             // _animator.SetBool("isClimbing", true);
             
             transform.position = corner;
- 
-            StopAllCoroutines();
-            StartCoroutine(FinishClimb());
         }
-        private IEnumerator FinishClimb()
+        private void CompleteClimb()
         {
-            yield return _climbDelay;
+            _physics.ResetConstrain();
+            _physics.SetFreeze(false);
+        }
+        private void SucceedClimb()
+        {
             Vector2 direction = _physics.GetHorizontalDirection();
             transform.position += new Vector3(climbOffset.x * direction.x, climbOffset.y, 0f);
             
+            // _animator.SetTrigger("climb");
             _physics.SetIsGrounded(true);
-            // _animator.SetBool("isClimbing", false);
             _isClimbing = false;
+            CompleteClimb();
+        }
+        private void CancelClimb()
+        {
+            StartCoroutine(TimeRecoveryRoutine());
+            CompleteClimb();
+        }
+
+        private IEnumerator TimeRecoveryRoutine()
+        {
+            _isRecovering = true;
+            yield return _waitTimeRecovery;
+            _isRecovering = _isClimbing = false;
         }
         
         private void OnDrawGizmos()
