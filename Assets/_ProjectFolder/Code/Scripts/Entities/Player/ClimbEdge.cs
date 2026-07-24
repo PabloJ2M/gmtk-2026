@@ -1,12 +1,12 @@
-using System.Collections;
+// using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem;
+// using UnityEngine.InputSystem;
 
 namespace Entity.Controller
 {
     public class ClimbEdge : MonoBehaviour
     {
-        [SerializeField] private float timeRecovery = 1f;
+        [SerializeField, Min(0f)] private float duration = 0.5f;//, timeRecovery = 1f;
         [SerializeField] private Vector2 climbOffset = Vector2.one, bodyOffset = 0.5f * Vector2.one;
         
         [Header("Detection")]
@@ -17,25 +17,25 @@ namespace Entity.Controller
         private ObjectAnimations _animator;
         private ObjectPhysics _physics;
         
-        private WaitForSeconds _waitTimeRecovery;
-        private bool _isClimbing, _isRecovering;
+        // private WaitForSeconds _waitTimeRecovery;
+        //private bool _isClimbing, _isRecovering;
 
         private void Awake()
         {
             _animator = GetComponent<ObjectAnimations>();
             _physics = GetComponent<ObjectPhysics>();
-            _waitTimeRecovery = new(timeRecovery);
+            // _waitTimeRecovery = new(timeRecovery);
         }
         private void Update()
         {
-            if (_isClimbing || _physics.IsGrounded()) return;
+            if (/*_isClimbing || */_physics.IsGrounded()) return;
             
             if (TryFindLedge(out Vector2 corner))
                 StartClimb(corner);
         }
 
-        private void OnMove(InputValue input) { if (_isClimbing && input.Get<Vector2>() != Vector2.zero) CancelClimb(); }
-        private void OnJump(InputValue input) { if (_isClimbing && !_isRecovering && input.isPressed) SucceedClimb(); }
+        // private void OnMove(InputValue input) { if (_isClimbing && input.Get<Vector2>() != Vector2.zero) CancelClimb(); }
+        // private void OnJump(InputValue input) { if (_isClimbing && !_isRecovering && input.isPressed) SucceedClimb(); }
         
         private bool TryFindLedge(out Vector2 corner)
         {
@@ -64,18 +64,19 @@ namespace Entity.Controller
         
         private void StartClimb(Vector2 corner)
         {
-            _isClimbing = true;
-            _physics.SetFreeze(true);
-            _physics.SetConstrain(RigidbodyConstraints2D.FreezeAll);
+            // _isClimbing = true;
+            _physics.SetConstrain(RigidbodyConstraints2D.FreezeAll, duration);
+            _physics.SetFreeze(true, duration);
             // _animator.SetBool("isClimbing", true);
             
             transform.position = corner;
+            SucceedClimb();
         }
-        private void CompleteClimb()
-        {
-            _physics.ResetConstrain();
-            _physics.SetFreeze(false);
-        }
+        // private void CompleteClimb()
+        // {
+        //     _physics.ResetConstrain();
+        //     _physics.SetFreeze(false);
+        // }
         private void SucceedClimb()
         {
             Vector2 direction = _physics.GetHorizontalDirection();
@@ -83,21 +84,21 @@ namespace Entity.Controller
             
             // _animator.SetTrigger("climb");
             _physics.SetIsGrounded(true);
-            _isClimbing = false;
-            CompleteClimb();
+            // _isClimbing = false;
+            // CompleteClimb();
         }
-        private void CancelClimb()
-        {
-            StartCoroutine(TimeRecoveryRoutine());
-            CompleteClimb();
-        }
+        // private void CancelClimb()
+        // {
+        //     StartCoroutine(TimeRecoveryRoutine());
+        //     CompleteClimb();
+        // }
 
-        private IEnumerator TimeRecoveryRoutine()
-        {
-            _isRecovering = true;
-            yield return _waitTimeRecovery;
-            _isRecovering = _isClimbing = false;
-        }
+        // private IEnumerator TimeRecoveryRoutine()
+        // {
+        //     _isRecovering = true;
+        //     yield return _waitTimeRecovery;
+        //     _isRecovering = _isClimbing = false;
+        // }
         
         private void OnDrawGizmos()
         {

@@ -21,7 +21,7 @@ namespace Entity.Controller
             _animator = GetComponent<ObjectAnimations>();
             _physics = GetComponent<ObjectPhysics>();
         }
-        private void FixedUpdate()
+        private void Update()
         {
             bool isFalling = _physics.GetLinearVelocityY() < -slideSpeed;
             bool shouldSlide = IsTouchingWall() && !_physics.IsGrounded() && isFalling;
@@ -45,7 +45,6 @@ namespace Entity.Controller
             _contacts.Remove(collision.collider);
         }
         
-        //Metodos comunes
         private bool IsTouchingWall() => _contacts.Count > 0;
     }
 }
